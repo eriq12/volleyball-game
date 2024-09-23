@@ -1,0 +1,51 @@
+[gd_scene load_steps=7 format=3 uid="uid://c5i7dyq46336k"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gdyss"]
+size = Vector3(5, 1, 5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hlip3"]
+albedo_color = Color(0, 0.494118, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6hhs5"]
+size = Vector3(5, 1, 5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qx2vp"]
+albedo_color = Color(1, 0.301961, 0.301961, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0v5al"]
+size = Vector3(15, 1, 10)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_poh1b"]
+albedo_color = Color(1, 0.827451, 0.356863, 1)
+
+[node name="VolleyballCourt" type="Node3D"]
+
+[node name="LeftTeamGround" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LeftTeamGround"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -0.5, 0)
+shape = SubResource("BoxShape3D_gdyss")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="LeftTeamGround/CollisionShape3D"]
+material_override = SubResource("StandardMaterial3D_hlip3")
+size = Vector3(5, 1, 5)
+
+[node name="RightTeamGround" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RightTeamGround"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, -0.5, 0)
+shape = SubResource("BoxShape3D_6hhs5")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="RightTeamGround/CollisionShape3D"]
+material_override = SubResource("StandardMaterial3D_qx2vp")
+size = Vector3(5, 1, 5)
+
+[node name="OuterArea" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="OuterArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_0v5al")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="OuterArea/CollisionShape3D"]
+material_override = SubResource("StandardMaterial3D_poh1b")
+size = Vector3(15, 0.99, 10)
