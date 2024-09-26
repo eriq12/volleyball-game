@@ -11,5 +11,16 @@ config_version=5
 [application]
 
 config/name="Volleyball Game"
+run/main_scene="res://game_master.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
+
+[layer_names]
+
+3d_physics/layer_1="Floor"
+3d_physics/layer_2="Player"
+3d_physics/layer_3="Ball"
+
+[physics]
+
+3d/default_gravity=4.9
