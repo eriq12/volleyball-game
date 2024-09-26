@@ -3,20 +3,36 @@ extends CharacterBody3D
 
 const SPEED = 5.0
 const JUMP_VELOCITY = 4.5
+var ball_in_range : bool = false
 
+@export_category("Player Controls")
+@export var hit_action : String = "P1_hit_ball"
+@export var jump_action : String = "P1_jump"
+@export var move_left_action : String = "P1_move_left"
+@export var move_right_action : String = "P1_move_right"
+@export var move_up_action : String = "P1_move_up"
+@export var move_down_action : String = "P1_move_down"
+
+func _process(_delta: float) -> void:
+	if ball_in_range and Input.is_action_just_pressed(hit_action):
+		var gm = get_tree().root.get_child(0)
+		gm.hit_set_ball()
 
 func _physics_process(delta: float) -> void:
+	
 	# Add the gravity.
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 
 	# Handle jump.
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
+	if Input.is_action_just_pressed(jump_action) and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
-	var input_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var input_dir := Vector2(velocity.x, velocity.z)
+	if is_on_floor():
+		input_dir = Input.get_vector(move_left_action, move_right_action, move_up_action, move_down_action)
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		velocity.x = direction.x * SPEED
@@ -29,6 +45,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
-	# get gamemaster
-	var gm = get_tree().root.get_child(0)
-	gm.hit_set_ball()
+	ball_in_range = true
+
+func _on_area_3d_area_exited(area: Area3D) -> void:
+	ball_in_range = false
