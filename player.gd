@@ -1,9 +1,10 @@
 extends CharacterBody3D
 
+class_name Player
 
 const SPEED = 5.0
 const JUMP_VELOCITY = 4.5
-var ball_in_range : bool = false
+		
 
 @export_category("Player Controls")
 @export var hit_action : String = "P1_hit_ball"
@@ -13,10 +14,22 @@ var ball_in_range : bool = false
 @export var move_up_action : String = "P1_move_up"
 @export var move_down_action : String = "P1_move_down"
 
+# ball related data
+var ball_in_range : bool = false
+@onready var can_hit_indicator : Sprite3D = $Highlight
+var can_hit_ball : bool :
+	set(value):
+		can_hit_indicator.visible = value
+	get:
+		return can_hit_indicator.visible
+
+# team
+var team : GameMaster.team
+
 func _process(_delta: float) -> void:
-	if ball_in_range and Input.is_action_just_pressed(hit_action):
+	if ball_in_range and is_on_floor() and can_hit_ball and Input.is_action_pressed(hit_action):
 		var gm = get_tree().root.get_child(0)
-		gm.hit_set_ball()
+		gm.hit_set_ball(self)
 
 func _physics_process(delta: float) -> void:
 	
@@ -43,6 +56,8 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+func change_highlight(visible:bool):
+	$Highlight.visible = visible
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
 	ball_in_range = true

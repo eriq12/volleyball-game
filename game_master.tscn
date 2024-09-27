@@ -7,10 +7,12 @@
 [ext_resource type="PackedScene" uid="uid://3ydr5e2okwg" path="res://player.tscn" id="5_4oevl"]
 [ext_resource type="Texture2D" uid="uid://dsbsiko8ukwjx" path="res://circle.png" id="6_1qqs6"]
 
-[node name="GameMaster" type="Node"]
+[node name="GameMaster" type="Node" node_paths=PackedStringArray("red_team", "blue_team")]
 script = ExtResource("1_qn78f")
 volleyball_scene = ExtResource("2_w1b5w")
 min_distance_from_net = 1.25
+red_team = [NodePath("Player2")]
+blue_team = [NodePath("Player")]
 blue_ball_spawn_point = Vector3(-5, 1, -2)
 red_ball_spawn_point = Vector3(5, 1, 2)
 hit_set_air_time = 1.5
