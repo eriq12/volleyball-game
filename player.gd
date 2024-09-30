@@ -2,9 +2,11 @@ extends CharacterBody3D
 
 class_name Player
 
-const SPEED = 5.0
+const SPEED = 2.5
 const JUMP_VELOCITY = 4.5
-		
+const HIT_LOCK_TIME = 0.5
+const HIT_RECOVER_TIME = 0.2
+
 
 @export_category("Player Controls")
 @export var hit_action : String = "P1_hit_ball"
@@ -17,19 +19,18 @@ const JUMP_VELOCITY = 4.5
 # ball related data
 var ball_in_range : bool = false
 @onready var can_hit_indicator : Sprite3D = $Highlight
-var can_hit_ball : bool :
-	set(value):
-		can_hit_indicator.visible = value
-	get:
-		return can_hit_indicator.visible
+
+@export_category("Indicator Related Settings")
+@export var ready_set_color : Color = Color.BLUE
+@export var hit_color : Color = Color.MEDIUM_AQUAMARINE
+@onready var original_color : Color = can_hit_indicator.modulate
+
+enum state {CANNOT_HIT = -1, HAS_HIT = 0, CAN_HIT = 1, READY_SET = 2, READY_SPIKE = 3}
+
+var player_state : state = state.CANNOT_HIT
 
 # team
 var team : GameMaster.team
-
-func _process(_delta: float) -> void:
-	if ball_in_range and is_on_floor() and can_hit_ball and Input.is_action_pressed(hit_action):
-		var gm = get_tree().root.get_child(0)
-		gm.hit_set_ball(self)
 
 func _physics_process(delta: float) -> void:
 	
@@ -38,15 +39,18 @@ func _physics_process(delta: float) -> void:
 		velocity += get_gravity() * delta
 
 	# Handle jump.
-	if Input.is_action_just_pressed(jump_action) and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	if is_on_floor():
+		if Input.is_action_just_pressed(jump_action):
+			velocity.y = JUMP_VELOCITY
+		elif Input.is_action_just_pressed(hit_action) and player_state == state.CAN_HIT:
+			ready_set_ball()
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
-	var input_dir := Vector2(velocity.x, velocity.z)
+	var input_dir := Input.get_vector(move_left_action, move_right_action, move_up_action, move_down_action)
+	var direction : Vector3 = Vector3(velocity.x, 0, velocity.z).normalized()
 	if is_on_floor():
-		input_dir = Input.get_vector(move_left_action, move_right_action, move_up_action, move_down_action)
-	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+		direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		velocity.x = direction.x * SPEED
 		velocity.z = direction.z * SPEED
@@ -56,11 +60,60 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-func change_highlight(visible:bool):
-	$Highlight.visible = visible
+func change_highlight(highlight_new_visible:bool, color:Color):
+	can_hit_indicator.visible = highlight_new_visible
+	can_hit_indicator.modulate = color
 
-func _on_area_3d_area_entered(area: Area3D) -> void:
+#region state management
+func allow_hit() -> void:
+	set_state(state.CAN_HIT, true)
+
+func disallow_hit() -> void:
+	set_state(state.CANNOT_HIT)
+
+func set_state(new_state:state, override:bool=false) -> void:
+	if player_state == state.CANNOT_HIT and not override:
+		return
+	player_state = new_state
+	match player_state:
+		state.CAN_HIT:
+			change_highlight(true, original_color)
+			self.set_physics_process(true)
+		state.HAS_HIT:
+			change_highlight(true, hit_color)
+			self.set_physics_process(false)
+		state.READY_SET:
+			change_highlight(true, ready_set_color)
+			self.set_physics_process(false)
+		_: # for state.CANNOT_HIT and other things to pretend this as default state
+			change_highlight(false, original_color)
+			self.set_physics_process(true)
+
+#endregion
+
+#region ball hitting
+
+func hit_set_ball() -> void:
+	get_tree().root.get_child(0).hit_set_ball()
+	set_state(state.HAS_HIT)
+	await get_tree().create_timer(HIT_RECOVER_TIME).timeout
+	set_state(state.CAN_HIT)
+
+
+func _on_area_3d_area_entered(_area: Area3D) -> void:
+	if player_state == state.READY_SET:
+		hit_set_ball()
+		return
 	ball_in_range = true
 
-func _on_area_3d_area_exited(area: Area3D) -> void:
+func _on_area_3d_area_exited(_area: Area3D) -> void:
 	ball_in_range = false
+
+func ready_set_ball() -> void:
+	if ball_in_range:
+		hit_set_ball()
+		return
+	set_state(state.READY_SET)
+	await get_tree().create_timer(HIT_LOCK_TIME).timeout
+	set_state(state.CAN_HIT)
+#endregion

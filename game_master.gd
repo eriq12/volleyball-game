@@ -52,6 +52,7 @@ var side_last_hit : team
 var side : team
 @onready var landing_indicator : Node3D = $LandingIndicator
 var last_hitter : Player = null
+var can_spike
 
 #endregion
 
@@ -115,9 +116,9 @@ func hit_set_ball(player:Player = null):
 			side_last_hit = last_hitter.team
 	
 	# choose next location
-	var far_out = land_length
+	var far_out = court_length
 	var min_out = min_distance_from_net
-	var width = land_width
+	var width = court_width
 	if side == team.BLUE:
 		far_out *= -1
 		min_out *= -1
@@ -143,11 +144,17 @@ func hit_ball_helper(flight_time: float, landing_x, landing_z):
 
 # assumes landing height of 0
 func get_hit_set_vert_speed(start_height:float, flight_time:float) -> float:
-	return ( ProjectSettings.get_setting("physics/3d/default_gravity") / 2 * pow(flight_time, 2) - start_height) / flight_time
+	var current_gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
+	return ( current_gravity / 2 * pow(flight_time, 2) - start_height) / flight_time
 
 #endregion
 
 func on_ball_land(landing_point_x: float, landing_point_z: float):
+	# disable team
+	if side == team.BLUE:
+		disable_team(blue_team)
+	else:
+		disable_team(red_team)
 	# hide indicator
 	landing_indicator.visible = false
 	# pause volleyball
@@ -165,9 +172,12 @@ func on_ball_land(landing_point_x: float, landing_point_z: float):
 	restart_volley(scoring_team)
 
 func reset_team_can_hit(can_hit_team:Array[Player], cannot_hit_team:Array[Player]):
-		for p in can_hit_team:
-			p.can_hit_ball = true
-		for p in cannot_hit_team:
-			p.can_hit_ball = false
+	for p in can_hit_team:
+		p.allow_hit()
+	disable_team(cannot_hit_team)
+
+func disable_team(cannot_hit_team:Array[Player]):
+	for p in cannot_hit_team:
+		p.disallow_hit()
 
 #endregion

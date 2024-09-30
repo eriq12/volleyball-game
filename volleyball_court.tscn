@@ -1,10 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://c5i7dyq46336k"]
+[gd_scene load_steps=8 format=3 uid="uid://c5i7dyq46336k"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hlip3"]
 albedo_color = Color(0, 0.494118, 1, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qx2vp"]
 albedo_color = Color(1, 0.301961, 0.301961, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4ufv"]
+albedo_color = Color(0.786916, 0.0004815, 0.78691, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0v5al"]
 size = Vector3(15, 1, 10)
@@ -21,14 +24,19 @@ size = Vector3(15, 10, 0.05)
 [node name="VolleyballCourt" type="Node3D"]
 
 [node name="BlueTeamGround" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, -0.499, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -0.499, 0)
 material_override = SubResource("StandardMaterial3D_hlip3")
-size = Vector3(5, 1, 5)
+size = Vector3(4, 1, 5)
 
 [node name="RedTeamGround" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, -0.499, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, -0.499, 0)
 material_override = SubResource("StandardMaterial3D_qx2vp")
-size = Vector3(5, 1, 5)
+size = Vector3(4, 1, 5)
+
+[node name="CenterArea" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.499, 0)
+material_override = SubResource("StandardMaterial3D_l4ufv")
+size = Vector3(2, 1, 5)
 
 [node name="ActualGround" type="StaticBody3D" parent="."]
 collision_priority = 2.0
