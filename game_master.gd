@@ -17,7 +17,7 @@ var volleyball : Volleyball
 @export var court_length : float = 5.0
 @export var court_width : float = 2.5
 # to avoid the ball passing through the net
-@export var min_distance_from_net : float = 1.0
+@export var attack_line_distance : float = 1.0
 
 @export_category("Land dimensions")
 @export var land_length : float = 7.5
@@ -57,6 +57,7 @@ var last_hitter : Player = null
 
 
 func _ready() -> void:
+	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance)
 	landing_indicator.visible = false
 	for p in red_team:
 		p.team = team.RED
@@ -69,7 +70,7 @@ func _ready() -> void:
 	# and increase min distance by ball radius to keep clearance 
 	land_length -= ball_radius
 	land_width -= ball_radius
-	min_distance_from_net += ball_radius
+	attack_line_distance += ball_radius
 	restart_volley(team.RED)
 
 func add_point(scoring_team:team):
@@ -116,7 +117,7 @@ func hit_set_ball(player:Player = null):
 	
 	# choose next location
 	var far_out = land_length
-	var min_out = min_distance_from_net
+	var min_out = attack_line_distance
 	var width = land_width
 	if side == team.BLUE:
 		far_out *= -1
