@@ -45,6 +45,7 @@ var _red_team_points : int = 0
 @export var red_ball_spawn_point : Vector3
 @export var hit_set_air_time : float = 2.0
 @export var ball_radius : float = 0.3
+@export var hit_set_height : float = 20
 
 # other ball related data
 var hits_left_on_side : int = 0
@@ -54,6 +55,8 @@ var side : team
 var last_hitter : Player = null
 
 #endregion
+
+var _gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 
 func _ready() -> void:
@@ -125,12 +128,13 @@ func hit_set_ball(player:Player = null):
 	var x = randf_range(min(far_out, min_out), max(min_out, far_out))
 	var z = randf_range(-width, width)
 	
-	hit_ball_helper(hit_set_air_time, x, z)
+	hit_ball_helper_by_height(hit_set_height, x, z)
 	
 #region helper methods
 
 #region ball flight calculations
-func hit_ball_helper(flight_time: float, landing_x, landing_z):
+# assumes landing height of 0
+func hit_ball_helper_by_time(flight_time: float, landing_x:float, landing_z:float) -> void:
 	# set indicator
 	landing_indicator.visible = true
 	landing_indicator.position = Vector3(landing_x, 0, landing_z)
@@ -138,13 +142,37 @@ func hit_ball_helper(flight_time: float, landing_x, landing_z):
 	# get ball velocity
 	var vz = (landing_z - volleyball.position.z) / flight_time
 	var vx = (landing_x - volleyball.position.x) / flight_time
-	var vy = get_hit_set_vert_speed(volleyball.position.y, flight_time)
+	var vy = get_hit_set_vert_speed_by_time(volleyball.position.y, flight_time)
 	
 	volleyball.velocity = Vector3(vx, vy, vz)
 
 # assumes landing height of 0
-func get_hit_set_vert_speed(start_height:float, flight_time:float) -> float:
-	return ( ProjectSettings.get_setting("physics/3d/default_gravity") / 2 * pow(flight_time, 2) - start_height) / flight_time
+func get_hit_set_vert_speed_by_time(start_height:float, flight_time:float) -> float:
+	return ( _gravity / 2 * pow(flight_time, 2) - start_height) / flight_time
+
+# no assumption of flight time, assumes landing height of 0 for indicator
+func hit_ball_helper_by_height(peak_height:float, landing_x:float, landing_z:float) -> void:
+	# set indicator
+	landing_indicator.visible = true
+	landing_indicator.position = Vector3(landing_x, 0, landing_z)
+	
+	var starting_height : float = volleyball.position.y
+	var vertical_speed : float = get_hit_set_vert_speed_by_height(starting_height, peak_height)
+	var time = (vertical_speed + sqrt(vertical_speed ** 2 + 2 * _gravity * starting_height))/_gravity
+
+	# get ball velocity
+	var vz = (landing_z - volleyball.position.z)/time
+	var vx = (landing_x - volleyball.position.x)/time
+
+	# velocity
+	volleyball.velocity = Vector3(vx, vertical_speed, vz)
+
+
+# assumes delta height 
+func get_hit_set_vert_speed_by_height(start_height:float, peak_height:float) -> float:
+	var delta_height = peak_height - start_height
+	print("delta height: %f" % delta_height)
+	return sqrt(2 * _gravity * delta_height)
 
 #endregion
 

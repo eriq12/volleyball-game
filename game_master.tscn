@@ -20,6 +20,7 @@ blue_team = [NodePath("Player")]
 blue_ball_spawn_point = Vector3(-5, 1, -2)
 red_ball_spawn_point = Vector3(5, 1, 2)
 hit_set_air_time = 1.5
+hit_set_height = 3.0
 
 [node name="UserInterface" parent="." instance=ExtResource("1_freef")]
 
