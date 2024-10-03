@@ -6,8 +6,6 @@ class_name GameMaster
 
 @export_category("Assets")
 @onready var ui = $UserInterface
-@export var volleyball_scene : PackedScene
-var volleyball : Volleyball
 
 #endregion
 
@@ -39,6 +37,8 @@ var _red_team_points : int = 0
 
 #region ball related
 
+@onready var volleyball_manager = $VolleyballManager
+
 @export_category("Ball rules")
 @export var max_hits_per_side : int = 3
 @export var blue_ball_spawn_point : Vector3
@@ -51,23 +51,18 @@ var _red_team_points : int = 0
 var hits_left_on_side : int = 0
 var side_last_hit : team
 var side : team
-@onready var landing_indicator : Node3D = $LandingIndicator
 var last_hitter : Player = null
 
 #endregion
 
-var _gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-
 
 func _ready() -> void:
 	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance)
-	landing_indicator.visible = false
 	for p in red_team:
 		p.team = team.RED
 	for p in blue_team:
 		p.team = team.BLUE
-	volleyball = volleyball_scene.instantiate()
-	add_child(volleyball)
+	
 	randomize()
 	# reduce land width, land length by ball radius to keep within bounds
 	# and increase min distance by ball radius to keep clearance 
@@ -86,17 +81,17 @@ func add_point(scoring_team:team):
 	ui.on_update_scores(_blue_team_points, _red_team_points)
 
 func restart_volley(serving_side: team = team.BLUE) -> void:
-	volleyball.set_physics_process(false)
+	volleyball_manager.pause_ball()
 	if serving_side == team.RED:
-		volleyball.position = red_ball_spawn_point
+		volleyball_manager.move_ball(red_ball_spawn_point)
 	else:
-		volleyball.position = blue_ball_spawn_point
+		volleyball_manager.move_ball(blue_ball_spawn_point)
 	await get_tree().create_timer(1).timeout
-	volleyball.set_physics_process(true)
 	side = serving_side
 	side_last_hit = serving_side
 	hits_left_on_side = 0
 	hit_set_ball()
+	volleyball_manager.resume_ball()
 
 func hit_set_ball(player:Player = null):
 	# handle amount of hits left allowed
@@ -128,59 +123,13 @@ func hit_set_ball(player:Player = null):
 	var x = randf_range(min(far_out, min_out), max(min_out, far_out))
 	var z = randf_range(-width, width)
 	
-	hit_ball_helper_by_height(hit_set_height, x, z)
+	volleyball_manager.hit_ball_helper_by_height(hit_set_height, x, z)
 	
 #region helper methods
 
-#region ball flight calculations
-# assumes landing height of 0
-func hit_ball_helper_by_time(flight_time: float, landing_x:float, landing_z:float) -> void:
-	# set indicator
-	landing_indicator.visible = true
-	landing_indicator.position = Vector3(landing_x, 0, landing_z)
-	
-	# get ball velocity
-	var vz = (landing_z - volleyball.position.z) / flight_time
-	var vx = (landing_x - volleyball.position.x) / flight_time
-	var vy = get_hit_set_vert_speed_by_time(volleyball.position.y, flight_time)
-	
-	volleyball.velocity = Vector3(vx, vy, vz)
-
-# assumes landing height of 0
-func get_hit_set_vert_speed_by_time(start_height:float, flight_time:float) -> float:
-	return ( _gravity / 2 * pow(flight_time, 2) - start_height) / flight_time
-
-# no assumption of flight time, assumes landing height of 0 for indicator
-func hit_ball_helper_by_height(peak_height:float, landing_x:float, landing_z:float) -> void:
-	# set indicator
-	landing_indicator.visible = true
-	landing_indicator.position = Vector3(landing_x, 0, landing_z)
-	
-	var starting_height : float = volleyball.position.y
-	var vertical_speed : float = get_hit_set_vert_speed_by_height(starting_height, peak_height)
-	var time = (vertical_speed + sqrt(vertical_speed ** 2 + 2 * _gravity * starting_height))/_gravity
-
-	# get ball velocity
-	var vz = (landing_z - volleyball.position.z)/time
-	var vx = (landing_x - volleyball.position.x)/time
-
-	# velocity
-	volleyball.velocity = Vector3(vx, vertical_speed, vz)
-
-
-# assumes delta height 
-func get_hit_set_vert_speed_by_height(start_height:float, peak_height:float) -> float:
-	var delta_height = peak_height - start_height
-	print("delta height: %f" % delta_height)
-	return sqrt(2 * _gravity * delta_height)
-
-#endregion
-
 func on_ball_land(landing_point_x: float, landing_point_z: float):
-	# hide indicator
-	landing_indicator.visible = false
-	# pause volleyball
-	volleyball.set_physics_process(false)
+	volleyball_manager.hide_indicator()
+	volleyball_manager.pause_ball()
 	# find who scored
 	var scoring_team : team = team.INDEFINITE
 	if abs(landing_point_x) >= court_length or abs(landing_point_z) >= court_width:

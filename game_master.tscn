@@ -1,15 +1,15 @@
-[gd_scene load_steps=7 format=3 uid="uid://ejy7ro7rm0g"]
+[gd_scene load_steps=8 format=3 uid="uid://ejy7ro7rm0g"]
 
 [ext_resource type="PackedScene" uid="uid://cwqxuuiv3equs" path="res://user_interface.tscn" id="1_freef"]
 [ext_resource type="Script" path="res://game_master.gd" id="1_qn78f"]
 [ext_resource type="PackedScene" uid="uid://bogoncn55a0sh" path="res://volleyball.tscn" id="2_w1b5w"]
+[ext_resource type="Script" path="res://volleyball_manager.gd" id="3_p3p8h"]
 [ext_resource type="PackedScene" uid="uid://c5i7dyq46336k" path="res://volleyball_court.tscn" id="4_726u5"]
 [ext_resource type="PackedScene" uid="uid://3ydr5e2okwg" path="res://player.tscn" id="5_4oevl"]
 [ext_resource type="Texture2D" uid="uid://dsbsiko8ukwjx" path="res://circle.png" id="6_1qqs6"]
 
 [node name="GameMaster" type="Node" node_paths=PackedStringArray("red_team", "blue_team")]
 script = ExtResource("1_qn78f")
-volleyball_scene = ExtResource("2_w1b5w")
 court_length = 9.0
 court_width = 4.5
 attack_line_distance = 3.0
@@ -21,6 +21,18 @@ blue_ball_spawn_point = Vector3(-5, 1, -2)
 red_ball_spawn_point = Vector3(5, 1, 2)
 hit_set_air_time = 1.5
 hit_set_height = 3.0
+
+[node name="VolleyballManager" type="Node" parent="."]
+script = ExtResource("3_p3p8h")
+volleyball_scene = ExtResource("2_w1b5w")
+
+[node name="LandingIndicator" type="Node3D" parent="VolleyballManager"]
+
+[node name="Sprite3D" type="Sprite3D" parent="VolleyballManager/LandingIndicator"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.05, 0)
+modulate = Color(0.70677, 0.000138905, 0.622373, 1)
+axis = 1
+texture = ExtResource("6_1qqs6")
 
 [node name="UserInterface" parent="." instance=ExtResource("1_freef")]
 
@@ -36,14 +48,6 @@ shadow_enabled = true
 [node name="Player" parent="." instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -1)
 
-[node name="LandingIndicator" type="Node3D" parent="."]
-
-[node name="Sprite3D" type="Sprite3D" parent="LandingIndicator"]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.05, 0)
-modulate = Color(0.70677, 0.000138905, 0.622373, 1)
-axis = 1
-texture = ExtResource("6_1qqs6")
-
 [node name="Player2" parent="." instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7937, 0, 1.17064)
 hit_action = "P2_hit_ball"
@@ -52,8 +56,3 @@ move_left_action = "P2_move_left"
 move_right_action = "P2_move_right"
 move_up_action = "P2_move_up"
 move_down_action = "P2_move_down"
-
-[connection signal="pressed" from="UserInterface/Button" to="." method="add_point" binds= [true]]
-[connection signal="pressed" from="UserInterface/Button2" to="." method="add_point" binds= [false]]
-
-[editable path="UserInterface"]

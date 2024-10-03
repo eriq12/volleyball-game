@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://3ydr5e2okwg"]
+[gd_scene load_steps=7 format=3 uid="uid://3ydr5e2okwg"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_0lebj"]
 [ext_resource type="Texture2D" uid="uid://dsbsiko8ukwjx" path="res://circle.png" id="1_sig02"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qr4xr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_v7pxn"]
 radius = 0.25
@@ -19,6 +21,12 @@ collision_layer = 2
 collision_mask = 11
 script = ExtResource("1_0lebj")
 
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+radius = 0.25
+height = 1.0
+material = SubResource("StandardMaterial3D_qr4xr")
+
 [node name="Highlight" type="Sprite3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, -2.18557e-08, -0.5, 0, 0.5, -2.18557e-08, 0, 0.1, 0)
 visible = false
@@ -27,10 +35,6 @@ texture = ExtResource("1_sig02")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_v7pxn")
-
-[node name="CSGCylinder3D" type="CSGCylinder3D" parent="CollisionShape3D"]
-radius = 0.25
-height = 1.0
 
 [node name="HitArea" type="Area3D" parent="."]
 collision_layer = 2
