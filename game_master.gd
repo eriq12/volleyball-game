@@ -27,8 +27,8 @@ class_name GameMaster
 
 enum team {BLUE, RED, INDEFINITE = -1}
 @export_category("Teams")
-@export var red_team : Array[Player]
-@export var blue_team : Array[Player]
+@export var red_team : Node
+@export var blue_team : Node
 
 var _blue_team_points : int = 0
 var _red_team_points : int = 0
@@ -45,10 +45,11 @@ var _red_team_points : int = 0
 @export var red_ball_spawn_point : Vector3
 @export var hit_set_air_time : float = 2.0
 @export var ball_radius : float = 0.3
-@export var hit_set_height : float = 20
+@export var hit_set_height : float = 3
+@export var hit_pass_height : float = 2
 
 # other ball related data
-var hits_left_on_side : int = 0
+var number_hits_on_side : int = 0
 var side_last_hit : team
 var side : team
 var last_hitter : Player = null
@@ -58,9 +59,9 @@ var last_hitter : Player = null
 
 func _ready() -> void:
 	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance)
-	for p in red_team:
+	for p in red_team.get_children():
 		p.team = team.RED
-	for p in blue_team:
+	for p in blue_team.get_children():
 		p.team = team.BLUE
 	
 	randomize()
@@ -89,14 +90,14 @@ func restart_volley(serving_side: team = team.BLUE) -> void:
 	await get_tree().create_timer(1).timeout
 	side = serving_side
 	side_last_hit = serving_side
-	hits_left_on_side = 0
+	number_hits_on_side = max_hits_per_side
 	hit_set_ball()
 	volleyball_manager.resume_ball()
 
 func hit_set_ball(player:Player = null):
 	# handle amount of hits left allowed
-	if hits_left_on_side <= 1:
-		hits_left_on_side = max_hits_per_side
+	if number_hits_on_side >= max_hits_per_side - 1:
+		number_hits_on_side = 0
 		if side == team.BLUE:
 			side = team.RED
 			reset_team_can_hit(red_team, blue_team)
@@ -104,7 +105,7 @@ func hit_set_ball(player:Player = null):
 			side = team.BLUE
 			reset_team_can_hit(blue_team, red_team)
 	else:
-		hits_left_on_side -= 1
+		number_hits_on_side += 1
 		# reset last hitter and disable player who just hit
 		if not last_hitter == null:
 			last_hitter.can_hit_ball = true
@@ -114,20 +115,29 @@ func hit_set_ball(player:Player = null):
 			side_last_hit = last_hitter.team
 	
 	# choose next location
-	var far_out = land_length
-	var min_out = attack_line_distance
-	var width = land_width
-	if side == team.BLUE:
-		far_out *= -1
-		min_out *= -1
-	var x = randf_range(min(far_out, min_out), max(min_out, far_out))
-	var z = randf_range(-width, width)
+	var location : Vector2 = Vector2.ZERO
+	# pass
+	if number_hits_on_side == 1:
+		var teammate = get_closest_teammate(player)
+		location.x = teammate.position.x
+		location.y = teammate.position.z
+	# set
+	else:
+		var far_out = land_length
+		var min_out = attack_line_distance
+		var width = land_width
+		if side == team.BLUE:
+			far_out *= -1
+			min_out *= -1
+		location.x = randf_range(min(far_out, min_out), max(min_out, far_out))
+		location.y = randf_range(-width, width)
 	
-	volleyball_manager.hit_ball_helper_by_height(hit_set_height, x, z)
+	volleyball_manager.hit_ball_helper_by_height(hit_pass_height if number_hits_on_side == 1 else hit_set_height, location.x, location.y)
 	
 #region helper methods
 
 func on_ball_land(landing_point_x: float, landing_point_z: float):
+	disable_all_team(blue_team if side == team.BLUE else red_team)
 	volleyball_manager.hide_indicator()
 	volleyball_manager.pause_ball()
 	# find who scored
@@ -142,10 +152,30 @@ func on_ball_land(landing_point_x: float, landing_point_z: float):
 	# continue the game
 	restart_volley(scoring_team)
 
-func reset_team_can_hit(can_hit_team:Array[Player], cannot_hit_team:Array[Player]):
-		for p in can_hit_team:
-			p.can_hit_ball = true
-		for p in cannot_hit_team:
+func reset_team_can_hit(can_hit_team:Node, cannot_hit_team:Node):
+	for p in can_hit_team.get_children():
+		p.can_hit_ball = true
+	disable_all_team(cannot_hit_team)
+
+func disable_all_team(cannot_hit_team:Node):
+	for p in cannot_hit_team.get_children():
 			p.can_hit_ball = false
+
+# use manhattan approx
+func get_closest_teammate(player:Player) -> Player:
+	var closest_teammate : Player = null
+	var closest_distance : float = land_length + land_width
+	var player_x : float = player.position.x
+	var player_z : float = player.position.z
+	for p in player.get_parent().get_children():
+		if not p == player:
+			var teammate_x : float = p.position.x
+			var teammate_z : float = p.position.z
+			var distance = abs(player_x - teammate_x) + abs(player_z - teammate_z)
+			if distance < closest_distance:
+				closest_teammate = p
+				closest_distance = distance
+	return closest_teammate
+
 
 #endregion

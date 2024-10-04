@@ -15,12 +15,11 @@ court_width = 4.5
 attack_line_distance = 3.0
 land_length = 12.0
 land_width = 7.5
-red_team = [NodePath("Player2")]
-blue_team = [NodePath("Player")]
+red_team = NodePath("RedTeam")
+blue_team = NodePath("BlueTeam")
 blue_ball_spawn_point = Vector3(-5, 1, -2)
 red_ball_spawn_point = Vector3(5, 1, 2)
 hit_set_air_time = 1.5
-hit_set_height = 3.0
 
 [node name="VolleyballManager" type="Node" parent="."]
 script = ExtResource("3_p3p8h")
@@ -45,11 +44,27 @@ transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 
 transform = Transform3D(0.65317, -0.574938, 0.492764, -9.61756e-09, 0.650761, 0.759283, -0.757212, -0.49594, 0.425057, 1.98433, 7, 0)
 shadow_enabled = true
 
-[node name="Player" parent="." instance=ExtResource("5_4oevl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -1)
+[node name="BlueTeam" type="Node" parent="."]
 
-[node name="Player2" parent="." instance=ExtResource("5_4oevl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7937, 0, 1.17064)
+[node name="Player" parent="BlueTeam" instance=ExtResource("5_4oevl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -1)
+
+[node name="Player3" parent="BlueTeam" instance=ExtResource("5_4oevl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, 2)
+
+[node name="RedTeam" type="Node" parent="."]
+
+[node name="Player2" parent="RedTeam" instance=ExtResource("5_4oevl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7937, 0, 1.17064)
+hit_action = "P2_hit_ball"
+jump_action = "P2_jump"
+move_left_action = "P2_move_left"
+move_right_action = "P2_move_right"
+move_up_action = "P2_move_up"
+move_down_action = "P2_move_down"
+
+[node name="Player4" parent="RedTeam" instance=ExtResource("5_4oevl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.7937, 0, -1.82936)
 hit_action = "P2_hit_ball"
 jump_action = "P2_jump"
 move_left_action = "P2_move_left"
