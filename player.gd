@@ -14,6 +14,10 @@ const JUMP_VELOCITY = 6
 @export var move_up_action : String = "P1_move_up"
 @export var move_down_action : String = "P1_move_down"
 
+# color
+@onready var default_color : Color = $Highlight.modulate
+@export var in_range_color : Color = Color.LIGHT_BLUE
+
 # ball related data
 var ball_in_range : bool = false
 @onready var can_hit_indicator : Sprite3D = $Highlight
@@ -29,7 +33,7 @@ var team : GameMaster.team
 func _process(_delta: float) -> void:
 	if ball_in_range and is_on_floor() and can_hit_ball and Input.is_action_pressed(hit_action):
 		var gm = get_tree().root.get_child(0)
-		gm.hit_set_ball(self)
+		gm.hit_ball(self)
 
 func _physics_process(delta: float) -> void:
 	
@@ -56,11 +60,18 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+func set_in_range(value:bool):
+	ball_in_range = value
+	if value:
+		$Highlight.modulate = in_range_color
+	else:
+		$Highlight.modulate = default_color
+
 func change_highlight(visible:bool):
 	$Highlight.visible = visible
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
-	ball_in_range = true
+	set_in_range(true)
 
 func _on_area_3d_area_exited(area: Area3D) -> void:
-	ball_in_range = false
+	set_in_range(false)

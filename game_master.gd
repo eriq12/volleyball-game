@@ -91,10 +91,10 @@ func restart_volley(serving_side: team = team.BLUE) -> void:
 	side = serving_side
 	side_last_hit = serving_side
 	number_hits_on_side = max_hits_per_side
-	hit_set_ball()
+	hit_ball()
 	volleyball_manager.resume_ball()
 
-func hit_set_ball(player:Player = null):
+func hit_ball(player:Player = null):
 	# handle amount of hits left allowed
 	if number_hits_on_side >= max_hits_per_side - 1:
 		number_hits_on_side = 0
