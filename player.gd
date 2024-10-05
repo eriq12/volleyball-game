@@ -22,6 +22,10 @@ var can_hit_ball : bool :
 	get:
 		return can_hit_indicator.visible
 
+# sorry I don't know what to name these. Long story short it's to allow 
+var jesus_take_the_wheel : bool = false
+var jesus_commands_where : Vector2
+
 # team
 var team : GameMaster.team
 
@@ -48,7 +52,12 @@ func _physics_process(delta: float) -> void:
 	# As good practice, you should replace UI actions with custom gameplay actions.
 	var input_dir := Vector2(velocity.x, velocity.z)
 	if is_on_floor():
-		input_dir = joy_input.input_direction
+		if jesus_take_the_wheel:
+			input_dir = Vector2(jesus_commands_where.x - position.x, jesus_commands_where.y - position.z)
+			if input_dir.length() < 0.1:
+				input_dir = Vector2.ZERO
+		else:
+			input_dir = joy_input.input_direction
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		velocity.x = direction.x * SPEED
@@ -65,6 +74,13 @@ func set_in_range(value:bool):
 		$Highlight.modulate = in_range_color
 	else:
 		$Highlight.modulate = default_color
+
+func command_to_go_to(location : Vector2):
+	jesus_take_the_wheel = true
+	jesus_commands_where = location
+
+func relieve_of_command():
+	jesus_take_the_wheel = false
 
 func change_highlight(visible:bool):
 	$Highlight.visible = visible
