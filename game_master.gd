@@ -47,6 +47,7 @@ var _red_team_points : int = 0
 @export var ball_radius : float = 0.3
 @export var hit_set_height : float = 3
 @export var hit_pass_height : float = 2
+@export var pass_land_variance : float = 1
 
 # other ball related data
 var number_hits_on_side : int = 0
@@ -116,21 +117,31 @@ func hit_ball(player:Player = null):
 	
 	# choose next location
 	var location : Vector2 = Vector2.ZERO
+	var far_out = land_length
+	var min_out = ball_radius
+	var court_far_out = court_length
+	var court_min_out = attack_line_distance
+	var width = land_width
+	if side == team.BLUE:
+		far_out *= -1
+		min_out *= -1
+		court_far_out *= -1
+		court_min_out *= -1
+	var x_left_bound = min(far_out, min_out)
+	var x_right_bound = max(far_out, min_out)
+	var court_x_left_bound = min(court_far_out, court_min_out)
+	var court_x_right_bound = max(court_far_out, court_min_out)
 	# pass
-	if number_hits_on_side == 1:
+	if number_hits_on_side > 0:
 		var teammate = get_closest_teammate(player)
-		location.x = teammate.position.x
-		location.y = teammate.position.z
+		var rand_angle = randf_range(0, 2 * PI)
+		var rand_magnitude = randf_range(0, pass_land_variance)
+		location.x = clamp(teammate.position.x + cos(rand_angle) * rand_magnitude, x_left_bound, x_right_bound)
+		location.y = clamp(teammate.position.z + cos(rand_angle) * rand_magnitude, -width, width)
 	# set
 	else:
-		var far_out = land_length
-		var min_out = attack_line_distance
-		var width = land_width
-		if side == team.BLUE:
-			far_out *= -1
-			min_out *= -1
-		location.x = randf_range(min(far_out, min_out), max(min_out, far_out))
-		location.y = randf_range(-width, width)
+		location.x = randf_range(court_x_left_bound, court_x_right_bound)
+		location.y = randf_range(-court_width, court_width)
 	
 	volleyball_manager.hit_ball_helper_by_height(hit_pass_height if number_hits_on_side == 1 else hit_set_height, location.x, location.y)
 	
