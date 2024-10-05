@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://3ydr5e2okwg"]
+[gd_scene load_steps=8 format=3 uid="uid://3ydr5e2okwg"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_0lebj"]
 [ext_resource type="Texture2D" uid="uid://dsbsiko8ukwjx" path="res://circle.png" id="1_sig02"]
+[ext_resource type="Script" path="res://joy_input.gd" id="3_w88aa"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qr4xr"]
 
@@ -48,6 +49,9 @@ shape = SubResource("CylinderShape3D_ql72p")
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="HitArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
 shape = SubResource("CylinderShape3D_ne8j8")
+
+[node name="JoyInput" type="Node" parent="."]
+script = ExtResource("3_w88aa")
 
 [connection signal="area_entered" from="HitArea" to="." method="_on_area_3d_area_entered"]
 [connection signal="area_exited" from="HitArea" to="." method="_on_area_3d_area_exited"]

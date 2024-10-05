@@ -5,7 +5,9 @@ class_name Player
 const SPEED = 5.0
 const JUMP_VELOCITY = 6
 # joy input node
-@export var joy_input : JoyInput
+@onready var joy_input : JoyInput = $JoyInput
+@export var controller_config : ControllerConfig = null
+@export var device_id : int = 0
 
 # color
 @onready var default_color : Color = $Highlight.modulate
@@ -22,6 +24,10 @@ var can_hit_ball : bool :
 
 # team
 var team : GameMaster.team
+
+func _ready() -> void:
+	joy_input.set_config(controller_config)
+	joy_input.set_device(device_id)
 
 func _process(_delta: float) -> void:
 	if ball_in_range and is_on_floor() and can_hit_ball and joy_input.hit_pressed:
