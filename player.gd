@@ -4,15 +4,8 @@ class_name Player
 
 const SPEED = 5.0
 const JUMP_VELOCITY = 6
-		
-
-@export_category("Player Controls")
-@export var hit_action : String = "P1_hit_ball"
-@export var jump_action : String = "P1_jump"
-@export var move_left_action : String = "P1_move_left"
-@export var move_right_action : String = "P1_move_right"
-@export var move_up_action : String = "P1_move_up"
-@export var move_down_action : String = "P1_move_down"
+# joy input node
+@export var joy_input : JoyInput
 
 # color
 @onready var default_color : Color = $Highlight.modulate
@@ -31,7 +24,7 @@ var can_hit_ball : bool :
 var team : GameMaster.team
 
 func _process(_delta: float) -> void:
-	if ball_in_range and is_on_floor() and can_hit_ball and Input.is_action_pressed(hit_action):
+	if ball_in_range and is_on_floor() and can_hit_ball and joy_input.hit_pressed:
 		var gm = get_tree().root.get_child(0)
 		gm.hit_ball(self)
 
@@ -42,14 +35,14 @@ func _physics_process(delta: float) -> void:
 		velocity += get_gravity() * delta
 
 	# Handle jump.
-	if Input.is_action_just_pressed(jump_action) and is_on_floor():
+	if joy_input.jump_pressed and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
 	var input_dir := Vector2(velocity.x, velocity.z)
 	if is_on_floor():
-		input_dir = Input.get_vector(move_left_action, move_right_action, move_up_action, move_down_action)
+		input_dir = joy_input.input_direction
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		velocity.x = direction.x * SPEED
@@ -75,3 +68,15 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 
 func _on_area_3d_area_exited(area: Area3D) -> void:
 	set_in_range(false)
+
+# require child node joy input
+func _get_configuration_warnings() -> PackedStringArray:
+	# try to find a child that is input
+	var child_joy_input : JoyInput = null
+	for child in get_children():
+		if child is JoyInput:
+			child_joy_input = child
+			break
+	if child_joy_input == null:
+		return ["Player instance needs a controller!"]
+	return []
