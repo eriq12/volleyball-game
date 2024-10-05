@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://ejy7ro7rm0g"]
+[gd_scene load_steps=10 format=3 uid="uid://ejy7ro7rm0g"]
 
 [ext_resource type="PackedScene" uid="uid://cwqxuuiv3equs" path="res://user_interface.tscn" id="1_freef"]
 [ext_resource type="Script" path="res://game_master.gd" id="1_qn78f"]
@@ -7,7 +7,15 @@
 [ext_resource type="PackedScene" uid="uid://c5i7dyq46336k" path="res://volleyball_court.tscn" id="4_726u5"]
 [ext_resource type="PackedScene" uid="uid://3ydr5e2okwg" path="res://player.tscn" id="5_4oevl"]
 [ext_resource type="Texture2D" uid="uid://dsbsiko8ukwjx" path="res://circle.png" id="6_1qqs6"]
-[ext_resource type="Script" path="res://joy_input.gd" id="8_pfuwu"]
+[ext_resource type="Script" path="res://controller_config.gd" id="8_i14l4"]
+
+[sub_resource type="Resource" id="Resource_6x1ia"]
+script = ExtResource("8_i14l4")
+hit_button = 2
+jump_button = 0
+move_x_axis = 0
+move_y_axis = 1
+deadzone = 0.1
 
 [node name="GameMaster" type="Node" node_paths=PackedStringArray("red_team", "blue_team")]
 script = ExtResource("1_qn78f")
@@ -47,32 +55,17 @@ shadow_enabled = true
 
 [node name="BlueTeam" type="Node" parent="."]
 
-[node name="Player" parent="BlueTeam" node_paths=PackedStringArray("joy_input") instance=ExtResource("5_4oevl")]
+[node name="Player" parent="BlueTeam" instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -1)
-joy_input = NodePath("JoyInput")
+controller_config = SubResource("Resource_6x1ia")
 
-[node name="JoyInput" type="Node" parent="BlueTeam/Player"]
-script = ExtResource("8_pfuwu")
-
-[node name="Player3" parent="BlueTeam" node_paths=PackedStringArray("joy_input") instance=ExtResource("5_4oevl")]
+[node name="Player3" parent="BlueTeam" instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, 2)
-joy_input = NodePath("JoyInput")
-
-[node name="JoyInput" type="Node" parent="BlueTeam/Player3"]
-script = ExtResource("8_pfuwu")
 
 [node name="RedTeam" type="Node" parent="."]
 
-[node name="Player2" parent="RedTeam" node_paths=PackedStringArray("joy_input") instance=ExtResource("5_4oevl")]
+[node name="Player2" parent="RedTeam" instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7937, 0, 1.17064)
-joy_input = NodePath("JoyInput")
 
-[node name="JoyInput" type="Node" parent="RedTeam/Player2"]
-script = ExtResource("8_pfuwu")
-
-[node name="Player4" parent="RedTeam" node_paths=PackedStringArray("joy_input") instance=ExtResource("5_4oevl")]
+[node name="Player4" parent="RedTeam" instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.7937, 0, -1.82936)
-joy_input = NodePath("JoyInput")
-
-[node name="JoyInput" type="Node" parent="RedTeam/Player4"]
-script = ExtResource("8_pfuwu")
