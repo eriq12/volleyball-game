@@ -69,3 +69,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7937, 0, 1.17064)
 
 [node name="Player4" parent="RedTeam" instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.7937, 0, -1.82936)
+
+[connection signal="ball_above_net" from="VolleyballManager" to="." method="_on_volleyball_manager_ball_above_net"]
+[connection signal="ball_below_net" from="VolleyballManager" to="." method="_on_volleyball_manager_ball_below_net"]

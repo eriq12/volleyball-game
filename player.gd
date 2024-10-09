@@ -34,9 +34,9 @@ func _ready() -> void:
 	joy_input.set_device(device_id)
 
 func _process(_delta: float) -> void:
-	if ball_in_range and is_on_floor() and can_hit_ball and joy_input.hit_pressed:
+	if joy_input.hit_pressed and can_hit_ball:
 		var gm = get_tree().root.get_child(0)
-		gm.hit_ball(self)
+		gm.request_hit_ball(self)
 
 func _physics_process(delta: float) -> void:
 	

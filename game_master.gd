@@ -48,12 +48,17 @@ var _red_team_points : int = 0
 @export var hit_set_height : float = 3
 @export var hit_pass_height : float = 2
 @export var pass_land_variance : float = 1
+@export var distance_tolerance : float = 2
 
 # other ball related data
 var number_hits_on_side : int = 0
 var side_last_hit : team
 var side : team
 var last_hitter : Player = null
+
+# queue hit
+var player_queued_hit : Player = null
+var has_ball_been_hit : bool = false
 
 #endregion
 
@@ -94,6 +99,19 @@ func restart_volley(serving_side: team = team.BLUE) -> void:
 	number_hits_on_side = max_hits_per_side
 	hit_ball()
 	volleyball_manager.resume_ball()
+
+#region ball hitting management
+
+func request_hit_ball(player:Player):
+	if not player.is_on_floor() or volleyball_manager.get_player_distance_from_landing(player) > distance_tolerance:
+		return
+	if player_queued_hit == null:
+		if volleyball_manager.is_ball_above_net:
+			player_queued_hit = player
+			player_queued_hit.command_to_go_to(volleyball_manager.get_landing_position())
+		else:
+			hit_ball(player)
+
 
 func hit_ball(player:Player = null):
 	# handle amount of hits left allowed
@@ -144,7 +162,21 @@ func hit_ball(player:Player = null):
 		location.y = randf_range(-court_width, court_width)
 	
 	volleyball_manager.hit_ball_helper_by_height(hit_pass_height if number_hits_on_side == 1 else hit_set_height, location.x, location.y)
+	has_ball_been_hit = true
 	
+func _on_volleyball_manager_ball_above_net() -> void:
+	has_ball_been_hit = false
+
+func _on_volleyball_manager_ball_below_net() -> void:
+	if not player_queued_hit == null:
+		hit_ball(player_queued_hit)
+		player_queued_hit.relieve_of_command()
+		player_queued_hit = null
+
+
+
+#endregion
+
 #region helper methods
 
 func on_ball_land(landing_point_x: float, landing_point_z: float):
