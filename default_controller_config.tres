@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ControllerConfig" load_steps=2 format=3 uid="uid://bleh1qmxhkpu"]
+
+[ext_resource type="Script" path="res://controller_config.gd" id="1_5a8d7"]
+
+[resource]
+script = ExtResource("1_5a8d7")
+hit_button = 2
+jump_button = 0
+move_x_axis = 0
+move_y_axis = 1
+deadzone = 0.1

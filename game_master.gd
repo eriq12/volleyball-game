@@ -48,7 +48,7 @@ var _red_team_points : int = 0
 @export var hit_set_height : float = 3
 @export var hit_pass_height : float = 2
 @export var pass_land_variance : float = 1
-@export var distance_tolerance : float = 2
+@export var distance_tolerance : float = 0.7
 
 # other ball related data
 var number_hits_on_side : int = 0
@@ -111,7 +111,7 @@ func request_hit_ball(player:Player):
 		await get_tree().create_timer(0.25).timeout
 		player.relieve_of_command()
 		return
-	if player_queued_hit == null:
+	if player_queued_hit == null and not has_ball_been_hit:
 		if volleyball_manager.is_ball_above_net:
 			player_queued_hit = player
 			player_queued_hit.command_to_go_to(volleyball_manager.get_landing_position())
@@ -173,7 +173,7 @@ func hit_ball(player:Player = null):
 func _on_volleyball_manager_ball_above_net() -> void:
 	has_ball_been_hit = false
 
-func _on_volleyball_manager_ball_below_net() -> void:
+func _on_volleyball_manager_ball_is_hittable() -> void:
 	if not player_queued_hit == null:
 		hit_ball(player_queued_hit)
 		player_queued_hit.relieve_of_command()

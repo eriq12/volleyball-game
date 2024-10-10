@@ -78,9 +78,11 @@ func set_in_range(value:bool):
 func command_to_go_to(location : Vector2):
 	jesus_take_the_wheel = true
 	jesus_commands_where = location
+	set_process(false)
 
 func relieve_of_command():
 	jesus_take_the_wheel = false
+	set_process(true)
 
 func change_highlight(visible:bool):
 	$Highlight.visible = visible

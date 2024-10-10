@@ -4,11 +4,14 @@ extends Node
 @export var volleyball_scene : PackedScene
 
 # ball stats
-@export var height_threshold_refresh : float = 1
+@export var height_threshold_refresh : float = 2.43
 var is_ball_above_net : bool = false
+@export var height_threshold_can_hit : float = 1
+var is_ball_hittable : bool = false
 
 signal ball_above_net
 signal ball_below_net
+signal ball_is_hittable
 
 # ball visuals
 var volleyball : Volleyball
@@ -23,13 +26,17 @@ func _ready() -> void:
 	landing_indicator.visible = false
 
 func _physics_process(_delta: float) -> void:
-	var new_value : bool = volleyball.position.y >= height_threshold_refresh
-	if new_value != is_ball_above_net:
-		if new_value:
+	var new_ball_height_state : bool = volleyball.position.y >= height_threshold_refresh
+	var new_ball_hittable_state : bool = volleyball.position.y <= height_threshold_can_hit
+	if new_ball_height_state != is_ball_above_net:
+		if new_ball_height_state:
 			ball_above_net.emit()
 		else:
 			ball_below_net.emit()
-	is_ball_above_net = new_value
+	if new_ball_hittable_state && not is_ball_hittable:
+		ball_is_hittable.emit()
+	is_ball_above_net = new_ball_height_state
+	is_ball_hittable = new_ball_hittable_state
 
 #region other ball management
 func pause_ball() -> void:
