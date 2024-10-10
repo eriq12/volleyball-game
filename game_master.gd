@@ -103,7 +103,13 @@ func restart_volley(serving_side: team = team.BLUE) -> void:
 #region ball hitting management
 
 func request_hit_ball(player:Player):
-	if not player.is_on_floor() or volleyball_manager.get_player_distance_from_landing(player) > distance_tolerance:
+	if not player.is_on_floor():
+		return
+	if volleyball_manager.get_player_distance_from_landing(player) > distance_tolerance:
+		# penalize player for pressing hit when not in position
+		player.command_to_go_to(Vector2(player.position.x, player.position.z))
+		await get_tree().create_timer(0.25).timeout
+		player.relieve_of_command()
 		return
 	if player_queued_hit == null:
 		if volleyball_manager.is_ball_above_net:
@@ -160,7 +166,7 @@ func hit_ball(player:Player = null):
 	else:
 		location.x = randf_range(court_x_left_bound, court_x_right_bound)
 		location.y = randf_range(-court_width, court_width)
-	
+	# hit the ball
 	volleyball_manager.hit_ball_helper_by_height(hit_pass_height if number_hits_on_side == 1 else hit_set_height, location.x, location.y)
 	has_ball_been_hit = true
 	

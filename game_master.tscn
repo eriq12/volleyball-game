@@ -29,6 +29,7 @@ blue_team = NodePath("BlueTeam")
 blue_ball_spawn_point = Vector3(-5, 1, -2)
 red_ball_spawn_point = Vector3(5, 1, 2)
 hit_set_air_time = 1.5
+distance_tolerance = 0.7
 
 [node name="VolleyballManager" type="Node" parent="."]
 script = ExtResource("3_p3p8h")
