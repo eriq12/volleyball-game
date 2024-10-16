@@ -12,14 +12,14 @@ class_name GameMaster
 #region bounds related
 
 @export_category("Court dimensions")
-@export var court_length : float = 5.0
-@export var court_width : float = 2.5
+@export var court_length : float = 9.0
+@export var court_width : float = 4.5
 # to avoid the ball passing through the net
-@export var attack_line_distance : float = 1.0
+@export var attack_line_distance : float = 3.0
 
 @export_category("Land dimensions")
-@export var land_length : float = 7.5
-@export var land_width : float = 5
+@export var land_length : float = 12.0
+@export var land_width : float = 7.5
 
 #endregion
 
@@ -43,7 +43,7 @@ var _red_team_points : int = 0
 @export var max_hits_per_side : int = 3
 @export var blue_ball_spawn_point : Vector3
 @export var red_ball_spawn_point : Vector3
-@export var hit_set_air_time : float = 2.0
+@export var hit_set_air_time : float = 1.5
 @export var ball_radius : float = 0.3
 @export var hit_set_height : float = 3
 @export var hit_pass_height : float = 2
@@ -93,7 +93,8 @@ func restart_volley(serving_side: team = team.BLUE) -> void:
 		volleyball_manager.move_ball(red_ball_spawn_point)
 	else:
 		volleyball_manager.move_ball(blue_ball_spawn_point)
-	await get_tree().create_timer(1).timeout
+	#await get_tree().create_timer(1).timeout
+	await move_teams_to_start()
 	side = serving_side
 	side_last_hit = serving_side
 	number_hits_on_side = max_hits_per_side
@@ -209,6 +210,29 @@ func reset_team_can_hit(can_hit_team:Node, cannot_hit_team:Node):
 func disable_all_team(cannot_hit_team:Node):
 	for p in cannot_hit_team.get_children():
 			p.can_hit_ball = false
+
+func move_teams_to_start():
+	var third_distance_out : float = (court_length - attack_line_distance) / 3
+	var blue_count : int = blue_team.get_child_count()
+	var red_count : int = red_team.get_child_count()
+	var blue_court_width_division = (court_width * 2) / (blue_count + 1)
+	var red_court_width_division = (court_width * 2) / (red_count + 1)
+	for b in range(blue_count):
+		var player : Player = blue_team.get_child(b)
+		var x : float = -attack_line_distance - (1 + b % 2) * third_distance_out
+		var z : float = blue_court_width_division * (b + 1) - court_width
+		player.command_to_go_to(Vector2(x, z))
+	for r in range(red_count):
+		var player : Player = red_team.get_child(r)
+		var x : float = attack_line_distance + (1 + r % 2) * third_distance_out
+		var z : float = court_width - red_court_width_division * (1 + r)
+		player.command_to_go_to(Vector2(x, z))
+	await get_tree().create_timer(1).timeout
+	for b in blue_team.get_children():
+		b.relieve_of_command()
+	for r in red_team.get_children():
+		r.relieve_of_command()
+	
 
 # use manhattan approx
 func get_closest_teammate(player:Player) -> Player:

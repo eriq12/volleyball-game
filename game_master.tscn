@@ -11,16 +11,10 @@
 
 [node name="GameMaster" type="Node" node_paths=PackedStringArray("red_team", "blue_team")]
 script = ExtResource("1_qn78f")
-court_length = 9.0
-court_width = 4.5
-attack_line_distance = 3.0
-land_length = 12.0
-land_width = 7.5
 red_team = NodePath("RedTeam")
 blue_team = NodePath("BlueTeam")
 blue_ball_spawn_point = Vector3(-5, 1, -2)
 red_ball_spawn_point = Vector3(5, 1, 2)
-hit_set_air_time = 1.5
 
 [node name="VolleyballManager" type="Node" parent="."]
 script = ExtResource("3_p3p8h")
