@@ -19,7 +19,6 @@ red_ball_spawn_point = Vector3(5, 1, 2)
 [node name="VolleyballManager" type="Node" parent="."]
 script = ExtResource("3_p3p8h")
 volleyball_scene = ExtResource("2_w1b5w")
-height_threshold_refresh = 1.5
 
 [node name="LandingIndicator" type="Node3D" parent="VolleyballManager"]
 
@@ -58,5 +57,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7937, 0, 1.17064)
 [node name="Player4" parent="RedTeam" instance=ExtResource("5_4oevl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.7937, 0, -1.82936)
 
-[connection signal="ball_above_net" from="VolleyballManager" to="." method="_on_volleyball_manager_ball_above_net"]
 [connection signal="ball_is_hittable" from="VolleyballManager" to="." method="_on_volleyball_manager_ball_is_hittable"]
+[connection signal="ball_refresh" from="VolleyballManager" to="." method="_on_volleyball_manager_ball_refresh"]

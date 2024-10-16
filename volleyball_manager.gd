@@ -8,10 +8,13 @@ extends Node
 var is_ball_above_net : bool = false
 @export var height_threshold_can_hit : float = 1
 var is_ball_hittable : bool = false
+@export var ball_refresh_height : float = 1.5
+var is_ball_in_refresh_zone
 
 signal ball_above_net
 signal ball_below_net
 signal ball_is_hittable
+signal ball_refresh
 
 # ball visuals
 var volleyball : Volleyball
@@ -28,15 +31,19 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	var new_ball_height_state : bool = volleyball.position.y >= net_height
 	var new_ball_hittable_state : bool = volleyball.position.y <= height_threshold_can_hit
+	var new_ball_in_refresh_zone : bool = volleyball.position.y >= ball_refresh_height
 	if new_ball_height_state != is_ball_above_net:
 		if new_ball_height_state:
 			ball_above_net.emit()
 		else:
 			ball_below_net.emit()
-	if new_ball_hittable_state && not is_ball_hittable:
+	if new_ball_hittable_state and not is_ball_hittable:
 		ball_is_hittable.emit()
+	if new_ball_in_refresh_zone and not is_ball_in_refresh_zone:
+		ball_refresh.emit()
 	is_ball_above_net = new_ball_height_state
 	is_ball_hittable = new_ball_hittable_state
+	is_ball_in_refresh_zone = new_ball_in_refresh_zone
 
 #region other ball management
 func pause_ball() -> void:

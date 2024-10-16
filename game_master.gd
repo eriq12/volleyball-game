@@ -113,7 +113,7 @@ func request_hit_ball(player:Player):
 		player.relieve_of_command()
 		return
 	if player_queued_hit == null and not has_ball_been_hit:
-		if volleyball_manager.is_ball_above_net:
+		if not volleyball_manager.is_ball_hittable:
 			player_queued_hit = player
 			player_queued_hit.command_to_go_to(volleyball_manager.get_landing_position())
 		else:
@@ -159,10 +159,9 @@ func hit_ball(player:Player = null):
 	# pass
 	if number_hits_on_side > 0:
 		var teammate = get_closest_teammate(player)
-		var rand_angle = randf_range(0, 2 * PI)
-		var rand_magnitude = randf_range(0, pass_land_variance)
-		location.x = clamp(teammate.position.x + cos(rand_angle) * rand_magnitude, x_left_bound, x_right_bound)
-		location.y = clamp(teammate.position.z + cos(rand_angle) * rand_magnitude, -width, width)
+		var rand_variance = Vector2.from_angle(randf_range(0, 2 * PI)) * randf_range(0, pass_land_variance)
+		location.x = clamp(teammate.position.x + rand_variance.x, x_left_bound, x_right_bound)
+		location.y = clamp(teammate.position.z + rand_variance.y, -width, width)
 	# set
 	else:
 		location.x = randf_range(court_x_left_bound, court_x_right_bound)
@@ -171,7 +170,7 @@ func hit_ball(player:Player = null):
 	volleyball_manager.hit_ball_helper_by_height(hit_pass_height if number_hits_on_side == 1 else hit_set_height, location.x, location.y)
 	has_ball_been_hit = true
 	
-func _on_volleyball_manager_ball_above_net() -> void:
+func _on_volleyball_manager_ball_refresh() -> void:
 	has_ball_been_hit = false
 
 func _on_volleyball_manager_ball_is_hittable() -> void:
