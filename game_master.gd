@@ -62,13 +62,20 @@ var has_ball_been_hit : bool = false
 
 #endregion
 
+var player_arrival_statuses : Array[bool] = []
+signal all_players_arrive
 
 func _ready() -> void:
 	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance)
+	var arrive_callable = Callable(self, "on_player_arrive")
 	for p in red_team.get_children():
 		p.team = team.RED
+		p.connect("reached_location", arrive_callable.bind(len(player_arrival_statuses)))
+		player_arrival_statuses.append(false)
 	for p in blue_team.get_children():
 		p.team = team.BLUE
+		p.connect("reached_location", arrive_callable.bind(len(player_arrival_statuses)))
+		player_arrival_statuses.append(false)
 	
 	randomize()
 	# reduce land width, land length by ball radius to keep within bounds
@@ -216,6 +223,8 @@ func move_teams_to_start():
 	var red_count : int = red_team.get_child_count()
 	var blue_court_width_division = (court_width * 2) / (blue_count + 1)
 	var red_court_width_division = (court_width * 2) / (red_count + 1)
+	for i in len(player_arrival_statuses):
+		player_arrival_statuses[i] = false
 	for b in range(blue_count):
 		var player : Player = blue_team.get_child(b)
 		var x : float = -attack_line_distance - (1 + b % 2) * third_distance_out
@@ -226,11 +235,12 @@ func move_teams_to_start():
 		var x : float = attack_line_distance + (1 + r % 2) * third_distance_out
 		var z : float = court_width - red_court_width_division * (1 + r)
 		player.command_to_go_to(Vector2(x, z))
-	await get_tree().create_timer(1).timeout
+	await all_players_arrive
 	for b in blue_team.get_children():
 		b.relieve_of_command()
 	for r in red_team.get_children():
 		r.relieve_of_command()
+	await get_tree().create_timer(1).timeout
 	
 
 # use manhattan approx
@@ -249,5 +259,11 @@ func get_closest_teammate(player:Player) -> Player:
 				closest_distance = distance
 	return closest_teammate
 
+func on_player_arrive(player_id:int):
+	player_arrival_statuses[player_id] = true
+	for status in player_arrival_statuses:
+		if not status:
+			return
+	all_players_arrive.emit()
 
 #endregion
