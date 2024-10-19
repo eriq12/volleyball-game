@@ -9,18 +9,16 @@ const JUMP_VELOCITY = 6
 @export var controller_config : ControllerConfig = null
 @export var device_id : int = 0
 
-# color
-@onready var default_color : Color = $Highlight.modulate
-@export var in_range_color : Color = Color.LIGHT_BLUE
-
 # ball related data
-var ball_in_range : bool = false
 @onready var can_hit_indicator : Sprite3D = $Highlight
 var can_hit_ball : bool :
 	set(value):
 		can_hit_indicator.visible = value
 	get:
 		return can_hit_indicator.visible
+
+# rather than finding the game master, use signals
+signal request_hit
 
 # sorry I don't know what to name these. Long story short it's to allow moving
 # the player to where they need to be
@@ -38,8 +36,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if joy_input.hit_pressed and can_hit_ball:
-		var gm = get_tree().root.get_child(0)
-		gm.request_hit_ball(self)
+		request_hit.emit()
 
 func _physics_process(delta: float) -> void:
 	
@@ -56,12 +53,7 @@ func _physics_process(delta: float) -> void:
 	var input_dir := Vector2(velocity.x, velocity.z)
 	if is_on_floor():
 		if jesus_take_the_wheel:
-			input_dir = Vector2(jesus_commands_where.x - position.x, jesus_commands_where.y - position.z)
-			if input_dir.length() < 0.1:
-				input_dir = Vector2.ZERO
-				if not on_location:
-					on_location = true
-					reached_location.emit()
+			input_dir = get_jesus_input()
 		else:
 			input_dir = joy_input.input_direction
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -74,13 +66,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-func set_in_range(value:bool):
-	ball_in_range = value
-	if value:
-		$Highlight.modulate = in_range_color
-	else:
-		$Highlight.modulate = default_color
-
+#region jesus taking wheel related code
 func command_to_go_to(location : Vector2):
 	jesus_take_the_wheel = true
 	jesus_commands_where = location
@@ -91,23 +77,16 @@ func relieve_of_command():
 	jesus_take_the_wheel = false
 	set_process(true)
 
-func change_highlight(visible:bool):
-	$Highlight.visible = visible
+func get_jesus_input() -> Vector2:
+	var base_vector = Vector2(jesus_commands_where.x - position.x, jesus_commands_where.y - position.z)
+	if base_vector.length() < 0.1:
+		base_vector = Vector2.ZERO
+		if not on_location:
+			on_location = true
+			reached_location.emit()
+	return base_vector
 
-func _on_area_3d_area_entered(area: Area3D) -> void:
-	set_in_range(true)
+#endregion
 
-func _on_area_3d_area_exited(area: Area3D) -> void:
-	set_in_range(false)
-
-# require child node joy input
-func _get_configuration_warnings() -> PackedStringArray:
-	# try to find a child that is input
-	var child_joy_input : JoyInput = null
-	for child in get_children():
-		if child is JoyInput:
-			child_joy_input = child
-			break
-	if child_joy_input == null:
-		return ["Player instance needs a controller!"]
-	return []
+func change_highlight(new_visible:bool):
+	$Highlight.visible = new_visible

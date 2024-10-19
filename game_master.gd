@@ -21,6 +21,19 @@ class_name GameMaster
 @export var land_length : float = 12.0
 @export var land_width : float = 7.5
 
+# bounds to be calculated when in game
+# land maximums
+var blue_land_left_bound : float
+var blue_land_right_bound : float
+var red_land_left_bound : float
+var red_land_right_bound : float
+var modified_land_width : float
+# court maximums
+var blue_court_left_bound : float
+var blue_court_right_bound : float
+var red_court_left_bound : float
+var red_court_right_bound : float
+
 #endregion
 
 #region teams related
@@ -66,23 +79,40 @@ var player_arrival_statuses : Array[bool] = []
 signal all_players_arrive
 
 func _ready() -> void:
+	# setup the court
 	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance)
+
+	# calculate land bounds to cache
+	blue_land_left_bound = -1 *land_length + ball_radius
+	blue_land_right_bound = -1 * ball_radius
+	red_land_left_bound = ball_radius
+	red_land_right_bound = land_length - ball_radius
+	modified_land_width = land_width - ball_radius
+
+	# calculate court bounds to cache
+	blue_court_left_bound = -1 * court_length
+	blue_court_right_bound = -1 * attack_line_distance
+	red_court_left_bound = attack_line_distance
+	red_court_right_bound = court_length
+	
+	# setup the players, connecting for alterting when players arrive at "jesus_take_the_wheel" methods
 	var arrive_callable = Callable(self, "on_player_arrive")
+	var request_hit_callable = Callable(self, "request_hit_ball")
 	for p in red_team.get_children():
 		p.team = team.RED
 		p.connect("reached_location", arrive_callable.bind(len(player_arrival_statuses)))
+		p.connect("request_hit", request_hit_callable.bind(p))
 		player_arrival_statuses.append(false)
 	for p in blue_team.get_children():
 		p.team = team.BLUE
 		p.connect("reached_location", arrive_callable.bind(len(player_arrival_statuses)))
+		p.connect("request_hit", request_hit_callable.bind(p))
 		player_arrival_statuses.append(false)
 	
+	# initialize rand calls for later on
 	randomize()
-	# reduce land width, land length by ball radius to keep within bounds
-	# and increase min distance by ball radius to keep clearance 
-	land_length -= ball_radius
-	land_width -= ball_radius
-	attack_line_distance += ball_radius
+	
+	# and let the games begin
 	restart_volley(team.RED)
 
 func add_point(scoring_team:team):
@@ -126,7 +156,6 @@ func request_hit_ball(player:Player):
 		else:
 			hit_ball(player)
 
-
 func hit_ball(player:Player = null):
 	# handle amount of hits left allowed
 	if number_hits_on_side >= max_hits_per_side - 1:
@@ -147,31 +176,28 @@ func hit_ball(player:Player = null):
 			last_hitter.can_hit_ball = false
 			side_last_hit = last_hitter.team
 	
+	# get the appropriate bounds
+	var land_left_bound = red_land_left_bound
+	var land_right_bound = red_land_right_bound
+	var court_left_bound = red_court_left_bound
+	var court_right_bound = red_court_right_bound
+	if side == team.BLUE:
+		land_left_bound = blue_land_left_bound
+		land_right_bound = blue_land_right_bound
+		court_left_bound = blue_court_left_bound
+		court_right_bound = blue_court_right_bound
+
 	# choose next location
 	var location : Vector2 = Vector2.ZERO
-	var far_out = land_length
-	var min_out = ball_radius
-	var court_far_out = court_length
-	var court_min_out = attack_line_distance
-	var width = land_width
-	if side == team.BLUE:
-		far_out *= -1
-		min_out *= -1
-		court_far_out *= -1
-		court_min_out *= -1
-	var x_left_bound = min(far_out, min_out)
-	var x_right_bound = max(far_out, min_out)
-	var court_x_left_bound = min(court_far_out, court_min_out)
-	var court_x_right_bound = max(court_far_out, court_min_out)
 	# pass
 	if number_hits_on_side > 0:
 		var teammate = get_closest_teammate(player)
 		var rand_variance = Vector2.from_angle(randf_range(0, 2 * PI)) * randf_range(0, pass_land_variance)
-		location.x = clamp(teammate.position.x + rand_variance.x, x_left_bound, x_right_bound)
-		location.y = clamp(teammate.position.z + rand_variance.y, -width, width)
+		location.x = clamp(teammate.position.x + rand_variance.x, land_left_bound, land_right_bound)
+		location.y = clamp(teammate.position.z + rand_variance.y, -modified_land_width, modified_land_width)
 	# set
 	else:
-		location.x = randf_range(court_x_left_bound, court_x_right_bound)
+		location.x = randf_range(court_left_bound, court_right_bound)
 		location.y = randf_range(-court_width, court_width)
 	# hit the ball
 	volleyball_manager.hit_ball_helper_by_height(hit_pass_height if number_hits_on_side == 1 else hit_set_height, location.x, location.y)
@@ -193,18 +219,23 @@ func _on_volleyball_manager_ball_is_hittable() -> void:
 #region helper methods
 
 func on_ball_land(landing_point_x: float, landing_point_z: float):
+	# disable team from hitting ball
 	disable_all_team(blue_team if side == team.BLUE else red_team)
+
 	volleyball_manager.hide_indicator()
 	volleyball_manager.pause_ball()
-	# find who scored
+
+	# find who scored and award appropriately
 	var scoring_team : team = team.INDEFINITE
 	if abs(landing_point_x) >= court_length or abs(landing_point_z) >= court_width:
 		scoring_team = team.BLUE if side_last_hit == team.RED else team.RED
 	else:
 		scoring_team = team.BLUE if landing_point_x > 0 else team.RED
 	add_point(scoring_team)
+
 	# wait a sec for everyone to figure out what's going on
 	await get_tree().create_timer(1).timeout
+
 	# continue the game
 	restart_volley(scoring_team)
 
@@ -218,13 +249,18 @@ func disable_all_team(cannot_hit_team:Node):
 			p.can_hit_ball = false
 
 func move_teams_to_start():
+	# get spread distances from attack line
 	var third_distance_out : float = (court_length - attack_line_distance) / 3
+	# get team counts
 	var blue_count : int = blue_team.get_child_count()
 	var red_count : int = red_team.get_child_count()
+	# find team width spread
 	var blue_court_width_division = (court_width * 2) / (blue_count + 1)
 	var red_court_width_division = (court_width * 2) / (red_count + 1)
+	# prep for signals to work properly when they arrive
 	for i in len(player_arrival_statuses):
 		player_arrival_statuses[i] = false
+	# let jesus take the wheel to bring them to the start
 	for b in range(blue_count):
 		var player : Player = blue_team.get_child(b)
 		var x : float = -attack_line_distance - (1 + b % 2) * third_distance_out
@@ -235,11 +271,14 @@ func move_teams_to_start():
 		var x : float = attack_line_distance + (1 + r % 2) * third_distance_out
 		var z : float = court_width - red_court_width_division * (1 + r)
 		player.command_to_go_to(Vector2(x, z))
+	# wait for them to stop moving
 	await all_players_arrive
+	# then release them
 	for b in blue_team.get_children():
 		b.relieve_of_command()
 	for r in red_team.get_children():
 		r.relieve_of_command()
+	# wait a sec before resolving and continuing on
 	await get_tree().create_timer(1).timeout
 	
 
