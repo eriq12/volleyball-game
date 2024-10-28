@@ -4,11 +4,11 @@ extends Node
 @export var volleyball_scene : PackedScene
 
 # ball stats
-@export var net_height : float = 2.43
+var net_height : float = 2.43
 var is_ball_above_net : bool = false
-@export var height_threshold_can_hit : float = 1
+var height_threshold_can_hit : float = 1
 var is_ball_hittable : bool = false
-@export var ball_refresh_height : float = 1.5
+var ball_refresh_height : float = 1.5
 var is_ball_in_refresh_zone
 
 signal ball_above_net

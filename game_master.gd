@@ -16,6 +16,7 @@ class_name GameMaster
 @export var court_width : float = 4.5
 # to avoid the ball passing through the net
 @export var attack_line_distance : float = 3.0
+@export var net_height : float = 2.43
 
 @export_category("Land dimensions")
 @export var land_length : float = 12.0
@@ -62,6 +63,8 @@ var _red_team_points : int = 0
 @export var hit_pass_height : float = 2
 @export var pass_land_variance : float = 1
 @export var distance_tolerance : float = 0.7
+@export var ball_refresh_height : float = 1.5
+@export var height_threshold_can_hit : float = 1
 
 # other ball related data
 var number_hits_on_side : int = 0
@@ -80,10 +83,13 @@ signal all_players_arrive
 
 func _ready() -> void:
 	# setup the court
-	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance)
+	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance, net_height)
+	volleyball_manager.net_height = net_height
+	volleyball_manager.ball_refresh_height = ball_refresh_height
+	volleyball_manager.height_threshold_can_hit = height_threshold_can_hit
 
 	# calculate land bounds to cache
-	blue_land_left_bound = -1 *land_length + ball_radius
+	blue_land_left_bound = -1 * land_length + ball_radius
 	blue_land_right_bound = -1 * ball_radius
 	red_land_left_bound = ball_radius
 	red_land_right_bound = land_length - ball_radius
