@@ -19,6 +19,7 @@ var can_hit_ball : bool :
 
 # rather than finding the game master, use signals
 signal request_hit
+signal request_jump
 
 # sorry I don't know what to name these. Long story short it's to allow moving
 # the player to where they need to be
@@ -46,7 +47,7 @@ func _physics_process(delta: float) -> void:
 
 	# Handle jump.
 	if joy_input.jump_pressed and is_on_floor() and not jesus_take_the_wheel:
-		velocity.y = JUMP_VELOCITY
+		request_jump.emit()
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.

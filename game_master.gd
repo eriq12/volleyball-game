@@ -81,6 +81,8 @@ var has_ball_been_hit : bool = false
 var player_arrival_statuses : Array[bool] = []
 signal all_players_arrive
 
+const JUMP_VELOCITY = 6
+
 func _ready() -> void:
 	# setup the court
 	$VolleyballCourt.set_dimensions(land_length * 2, land_width * 2, court_length * 2, court_width * 2, attack_line_distance, net_height)
@@ -104,16 +106,19 @@ func _ready() -> void:
 	# setup the players, connecting for alterting when players arrive at "jesus_take_the_wheel" methods
 	var arrive_callable = Callable(self, "on_player_arrive")
 	var request_hit_callable = Callable(self, "request_hit_ball")
+	var request_jump_callable = Callable(self, "_on_request_jump")
 	for p in red_team.get_children():
 		p.team = team.RED
 		p.connect("reached_location", arrive_callable.bind(len(player_arrival_statuses)))
 		p.connect("request_hit", request_hit_callable.bind(p))
 		player_arrival_statuses.append(false)
+		p.connect("request_jump", request_jump_callable.bind(p))
 	for p in blue_team.get_children():
 		p.team = team.BLUE
 		p.connect("reached_location", arrive_callable.bind(len(player_arrival_statuses)))
 		p.connect("request_hit", request_hit_callable.bind(p))
 		player_arrival_statuses.append(false)
+		p.connect("request_jump", request_jump_callable.bind(p))
 	
 	# initialize rand calls for later on
 	randomize()
@@ -218,7 +223,8 @@ func _on_volleyball_manager_ball_is_hittable() -> void:
 		player_queued_hit.relieve_of_command()
 		player_queued_hit = null
 
-
+func _on_request_jump(player: Player):
+	player.velocity.y = JUMP_VELOCITY
 
 #endregion
 
